@@ -1,42 +1,70 @@
 import tkinter as tk
 from tkinter import messagebox
+import json
 
 class Contacto:
-    def __init__(self, nombre, Teléfono, email, dirección):
+    def __init__(self, nombre, telefono, email, direccion):
         self.nombre = nombre
-        self.Teléfono = Teléfono
+        self.telefono  = telefono
         self.email = email
-        self.dirección = dirección
+        self.direccion  = direccion
 
 class GestorContactos:
-    def __init__(self):
+    def __init__(self, archivo="contactos.json"):
         self.contactos = []
+        self.archivo = archivo  # Asignamos el valor a self.archivo
+        self.cargar_contactos()  # Carga los contactos desde el archivo
 
-    def agregar_contacto(self, nombre, Teléfono, email, dirección):
-        contacto = Contacto(nombre, Teléfono, email, dirección)
+    def cargar_contactos(self):
+        """Carga los contactos desde un archivo JSON"""
+        try:
+            with open(self.archivo, "r") as file:
+                datos = json.load(file)
+                self.contactos = [Contacto(**c) for c in datos]  # Convierte el diccionario a objetos Contacto
+        except FileNotFoundError:
+            # Si el archivo no existe, se empieza con una lista vacía
+            self.contactos = []
+
+    def guardar_contactos(self):
+        """Guarda la lista de contactos en un archivo JSON"""
+        with open(self.archivo, "w") as file:
+            # Guarda los contactos como una lista de diccionarios
+            json.dump([contacto.__dict__ for contacto in self.contactos], file, indent=4)
+
+    def agregar_contacto(self, nombre, telefono, email, direccion):
+        """Agrega un nuevo contacto"""
+        contacto = Contacto(nombre, telefono, email, direccion)
         self.contactos.append(contacto)
+        self.guardar_contactos()  # Guarda los cambios en el archivo
 
     def eliminar_contacto(self, nombre):
+        """Elimina un contacto por nombre"""
         encontrado = False
         for i in range(len(self.contactos)):
             if self.contactos[i].nombre == nombre:
-                self.contactos.remove(self.contactos[i])
+                self.contactos.pop(i)
                 encontrado = True
                 break
+        if encontrado:
+            self.guardar_contactos()  # Guarda los cambios en el archivo después de eliminar
         return encontrado
 
     def editar_contacto(self, nombre, nuevo_nombre, nuevo_telefono, nuevo_email, nueva_direccion):
+        """Edita un contacto existente"""
         for contacto in self.contactos:
             if contacto.nombre == nombre:
                 contacto.nombre = nuevo_nombre
-                contacto.Teléfono = nuevo_telefono
+                contacto.telefono = nuevo_telefono
                 contacto.email = nuevo_email
-                contacto.dirección = nueva_direccion
+                contacto.direccion = nueva_direccion
+                self.guardar_contactos()  # Guarda los cambios después de editar
                 return True
         return False
 
     def mostrar_contactos(self):
+        """Muestra todos los contactos"""
         return self.contactos
+
 
 
 class InterfazGrafica:
@@ -129,7 +157,7 @@ class InterfazGrafica:
         nuevo_telefono_label = tk.Label(ventana_editar, text="Nuevo Teléfono:")
         nuevo_telefono_label.pack()
         nuevo_telefono_entry = tk.Entry(ventana_editar)
-        nuevo_telefono_entry.insert(0, contacto.Teléfono)
+        nuevo_telefono_entry.insert(0, contacto.telefono)
         nuevo_telefono_entry.pack()
 
         nuevo_email_label = tk.Label(ventana_editar, text="Nuevo Email:")
@@ -141,7 +169,7 @@ class InterfazGrafica:
         nueva_direccion_label = tk.Label(ventana_editar, text="Nueva Dirección:")
         nueva_direccion_label.pack()
         nueva_direccion_entry = tk.Entry(ventana_editar)
-        nueva_direccion_entry.insert(0, contacto.dirección)
+        nueva_direccion_entry.insert(0, contacto.direccion)
         nueva_direccion_entry.pack()
 
         # Botón para guardar los cambios de edición
@@ -181,11 +209,11 @@ class InterfazGrafica:
         # Mostrar detalles del contacto
         nombre_label = tk.Label(ventana_detalles, text=f"Nombre: {contacto.nombre}")
         nombre_label.pack()
-        telefono_label = tk.Label(ventana_detalles, text=f"Teléfono: {contacto.Teléfono}")
+        telefono_label = tk.Label(ventana_detalles, text=f"Teléfono: {contacto.telefono}")
         telefono_label.pack()
         email_label = tk.Label(ventana_detalles, text=f"Email: {contacto.email}")
         email_label.pack()
-        direccion_label = tk.Label(ventana_detalles, text=f"Dirección: {contacto.dirección}")
+        direccion_label = tk.Label(ventana_detalles, text=f"Dirección: {contacto.direccion}")
         direccion_label.pack()
 
         # Botones para eliminar y editar contacto
